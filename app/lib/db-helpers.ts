@@ -1,20 +1,20 @@
 // Helper để map weekday từ database format sang T2-CN
-export function mapWeekday(weekday: string | number): string {
-  const map: Record<string | number, string> = {
+export function mapWeekday(weekday: string | number): DayKey {
+  const map: Record<string | number, DayKey> = {
+    T2: "T2",
+    T3: "T3",
+    T4: "T4",
+    T5: "T5",
+    T6: "T6",
+    T7: "T7",
+    CN: "CN",
     "0": "CN",
-    0: "CN",
     "1": "T2",
-    1: "T2",
     "2": "T3",
-    2: "T3",
     "3": "T4",
-    3: "T4",
     "4": "T5",
-    4: "T5",
     "5": "T6",
-    5: "T6",
     "6": "T7",
-    6: "T7",
     Monday: "T2",
     Tuesday: "T3",
     Wednesday: "T4",
@@ -35,6 +35,7 @@ export function mapPeriodToTime(periodNo: number): string {
     4: "13:30-15:00",
     5: "15:15-16:45",
     6: "18:30-20:00",
+    7: "20:05-21:35",
   };
   return times[periodNo] || "07:15-08:45";
 }
@@ -45,6 +46,7 @@ export type ScheduleEntry = {
   id: string;
   day: DayKey;
   time: string;
+  periodNo: number;
   subject: string;
   room: string;
   type: "class" | "extra";

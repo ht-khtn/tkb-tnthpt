@@ -1,42 +1,45 @@
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
+function supabaseHeaders() {
+  return {
+    apikey: SUPABASE_KEY || "",
+    Authorization: `Bearer ${SUPABASE_KEY || ""}`,
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+}
+
 interface SupabaseOptions {
   select?: string;
   eq?: Record<string, string | number>;
   limit?: number;
 }
 
-async function supabaseQuery(table: string, options: SupabaseOptions = {}) {
-  let url = `${SUPABASE_URL}/rest/v1/${table}`;
-
-  const params = new URLSearchParams();
+function buildSupabaseUrl(table: string, options: SupabaseOptions = {}) {
+  const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
 
   if (options.select) {
-    params.append("select", options.select);
+    url.searchParams.set("select", options.select);
   }
 
   if (options.eq) {
     for (const [key, value] of Object.entries(options.eq)) {
-      params.append(`${key}=eq.${value}`, "");
+      url.searchParams.set(key, `eq.${value}`);
     }
   }
 
   if (options.limit) {
-    params.append("limit", options.limit.toString());
+    url.searchParams.set("limit", options.limit.toString());
   }
 
-  const queryString = params.toString();
-  if (queryString) {
-    url += `?${queryString}`;
-  }
+  return url.toString();
+}
 
-  const response = await fetch(url, {
+async function supabaseQuery(table: string, options: SupabaseOptions = {}) {
+  const response = await fetch(buildSupabaseUrl(table, options), {
     method: "GET",
-    headers: {
-      apikey: SUPABASE_KEY || "",
-      "Content-Type": "application/json",
-    },
+    headers: supabaseHeaders(),
   });
 
   if (!response.ok) {
@@ -53,58 +56,31 @@ export async function getClasses() {
 }
 
 export async function getStudents(className?: string) {
-  if (className) {
-    const url = `${SUPABASE_URL}/rest/v1/students?class=eq.${className}&select=id,name,class`;
-    const response = await fetch(url, {
-      headers: {
-        apikey: SUPABASE_KEY || "",
-        "Content-Type": "application/json",
-      },
-    });
-    if (!response.ok)
-      throw new Error(`Failed to fetch students: ${response.status}`);
-    return response.json();
-  }
-  return supabaseQuery("students", { select: "id, name, class" });
+  return supabaseQuery("students", {
+    select: "id, name, class",
+    eq: className ? { class: className } : undefined,
+  });
 }
 
 export async function getClassTimetable(className: string) {
-  const url = `${SUPABASE_URL}/rest/v1/class_timetable?class_name=eq.${className}`;
-  const response = await fetch(url, {
-    headers: {
-      apikey: SUPABASE_KEY || "",
-      "Content-Type": "application/json",
-    },
+  return supabaseQuery("class_timetable", {
+    select: "id,weekday,period_no,subject_name,class_name",
+    eq: { class_name: className },
   });
-  if (!response.ok)
-    throw new Error(`Failed to fetch class timetable: ${response.status}`);
-  return response.json();
 }
 
 export async function getStudentExtraSubjects(studentId: number) {
-  const url = `${SUPABASE_URL}/rest/v1/student_subjects?student_id=eq.${studentId}`;
-  const response = await fetch(url, {
-    headers: {
-      apikey: SUPABASE_KEY || "",
-      "Content-Type": "application/json",
-    },
+  return supabaseQuery("student_subjects", {
+    select: "subject_name",
+    eq: { student_id: studentId },
   });
-  if (!response.ok)
-    throw new Error(`Failed to fetch student subjects: ${response.status}`);
-  return response.json();
 }
 
 export async function getExtraSubjectTimetable(subjectName: string) {
-  const url = `${SUPABASE_URL}/rest/v1/thpt_timetable?subject_name=eq.${subjectName}`;
-  const response = await fetch(url, {
-    headers: {
-      apikey: SUPABASE_KEY || "",
-      "Content-Type": "application/json",
-    },
+  return supabaseQuery("thpt_timetable", {
+    select: "id,weekday,period_no,subject_name,location",
+    eq: { subject_name: subjectName },
   });
-  if (!response.ok)
-    throw new Error(`Failed to fetch subject timetable: ${response.status}`);
-  return response.json();
 }
 
 export async function getAllSubjects() {

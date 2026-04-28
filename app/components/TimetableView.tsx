@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { ScheduleEntry } from '@/app/lib/db-helpers'
+import { mapPeriodToTime, ScheduleEntry } from '@/app/lib/db-helpers'
 
 const dayLabels: Record<string, string> = {
     T2: 'Thứ 2',
@@ -13,38 +13,96 @@ const dayLabels: Record<string, string> = {
     CN: 'Chủ nhật',
 }
 
-const dayOrder: string[] = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']
+const dayOrder: string[] = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+const periods = [1, 2, 3, 4, 5, 6, 7]
 
 export default function TimetableView({ entries }: { entries: ScheduleEntry[] }) {
-    const byDay = dayOrder.reduce<Record<string, ScheduleEntry[]>>((acc, d) => {
-        acc[d] = []
-        return acc
-    }, {})
+    // Group entries by period and day
+    const tableData: Record<number, Record<string, ScheduleEntry[]>> = {}
 
-    for (const e of entries) {
-        if (!byDay[e.day]) byDay[e.day] = []
-        byDay[e.day].push(e)
-    }
+    periods.forEach(p => {
+        tableData[p] = {}
+        dayOrder.forEach(d => {
+            tableData[p][d] = []
+        })
+    })
+
+    entries.forEach(entry => {
+        if (tableData[entry.periodNo] && tableData[entry.periodNo][entry.day]) {
+            tableData[entry.periodNo][entry.day].push(entry)
+        }
+    })
 
     return (
-        <div className="space-y-4">
-            {dayOrder.map((d) => (
-                <div key={d}>
-                    <h4 className="mb-2 text-sm font-semibold">{dayLabels[d]}</h4>
-                    <div className="grid gap-2">
-                        {(byDay[d] ?? []).map((e) => (
-                            <div key={e.id} className="flex items-center justify-between rounded border p-2" style={{ borderColor: "var(--stroke)" }}>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-medium">{e.subject}</span>
-                                    <span className="text-xs" style={{ color: "var(--muted)" }}>{e.room}</span>
-                                </div>
-                                <div className="text-sm" style={{ color: "var(--muted)" }}>{e.time}</div>
-                            </div>
+        <div className="w-full overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+                <thead>
+                    <tr style={{ background: 'var(--accent-soft)' }}>
+                        <th
+                            className="border p-2 font-semibold"
+                            style={{ borderColor: 'var(--stroke)', color: 'var(--ink)' }}
+                        >
+                            Tiết
+                        </th>
+                        {dayOrder.map(day => (
+                            <th
+                                key={day}
+                                className="border p-2 font-semibold text-center"
+                                style={{ borderColor: 'var(--stroke)', color: 'var(--ink)' }}
+                            >
+                                {dayLabels[day]}
+                            </th>
                         ))}
-                        {(byDay[d] ?? []).length === 0 && <div className="text-xs" style={{ color: "var(--muted)" }}>Không có lịch.</div>}
-                    </div>
-                </div>
-            ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {periods.map(period => (
+                        <tr key={period}>
+                            <td
+                                className="border p-2 font-medium"
+                                style={{ borderColor: 'var(--stroke)', color: 'var(--ink)' }}
+                            >
+                                S{period} ({mapPeriodToTime(period)})
+                            </td>
+                            {dayOrder.map(day => (
+                                <td
+                                    key={`${period}-${day}`}
+                                    className="border p-2"
+                                    style={{
+                                        borderColor: 'var(--stroke)',
+                                        minHeight: '80px',
+                                        verticalAlign: 'top',
+                                    }}
+                                >
+                                    <div className="space-y-1">
+                                        {tableData[period][day].length > 0 ? (
+                                            tableData[period][day].map(entry => (
+                                                <div
+                                                    key={entry.id}
+                                                    className="rounded p-1 text-xs"
+                                                    style={{
+                                                        background:
+                                                            entry.type === 'class'
+                                                                ? 'var(--accent-soft)'
+                                                                : 'rgba(20, 184, 166, 0.08)',
+                                                        border: `1px solid ${entry.type === 'class' ? 'var(--accent)' : '#a7f3d0'
+                                                            }`,
+                                                    }}
+                                                >
+                                                    <div className="font-medium">{entry.subject}</div>
+                                                    <div style={{ color: 'var(--muted)' }}>{entry.room}</div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>-</div>
+                                        )}
+                                    </div>
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     )
 }

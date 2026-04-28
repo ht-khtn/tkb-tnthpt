@@ -1,32 +1,29 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { getClasses, getStudents, getClassTimetable, getStudentExtraSubjects, getExtraSubjectTimetable, getAllSubjects } from '@/app/lib/supabase-api'
-import { mapWeekday, mapPeriodToTime, ScheduleEntry } from '@/app/lib/db-helpers'
+import { getClasses, getStudents, getClassTimetable, getStudentExtraSubjects, getExtraSubjectTimetable } from '@/app/lib/supabase-api'
+import { mapPeriodToTime, mapWeekday, ScheduleEntry } from '@/app/lib/db-helpers'
 import TimetableView from '@/app/components/TimetableView'
 
 export default function TkbClient() {
     const [classes, setClasses] = useState<Array<{ name: string; homeroom_teacher: string }>>([])
     const [students, setStudents] = useState<Array<{ id: number; name: string; class: string }>>([])
-    const [extraSubjects, setExtraSubjects] = useState<Array<{ name: string }>>([])
     const [classId, setClassId] = useState<string | null>(null)
     const [studentId, setStudentId] = useState<string | null>(null)
-    const [selectedExtras, setSelectedExtras] = useState<string[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [composed, setComposed] = useState<ScheduleEntry[]>([])
+    const [classEntries, setClassEntries] = useState<ScheduleEntry[]>([])
+    const [extraEntries, setExtraEntries] = useState<ScheduleEntry[]>([])
 
-    // Load initial data
+    const composed = useMemo(() => [...classEntries, ...extraEntries], [classEntries, extraEntries])
+
+    // Load initial data (classes only)
     useEffect(() => {
         const loadData = async () => {
             try {
                 setLoading(true)
-                const [classesData, subjectsData] = await Promise.all([
-                    getClasses(),
-                    getAllSubjects(),
-                ])
+                const classesData = await getClasses()
                 setClasses(classesData)
-                setExtraSubjects(subjectsData)
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load data')
             } finally {
@@ -41,6 +38,8 @@ export default function TkbClient() {
         const loadStudents = async () => {
             if (!classId) {
                 setStudents([])
+                setClassEntries([])
+                setExtraEntries([])
                 return
             }
             try {
@@ -53,155 +52,158 @@ export default function TkbClient() {
         loadStudents()
     }, [classId])
 
-    const studentsForClass = useMemo(() => {
-        return students
-    }, [students])
-
-    // Fetch and compose timetable
+    // Fetch class timetable whenever class changes
     useEffect(() => {
-        const composeSchedule = async () => {
+        let isCancelled = false
+
+        const loadClassSchedule = async () => {
             if (!classId) {
-                setComposed([])
+                setClassEntries([])
+                setExtraEntries([])
                 return
             }
             try {
-                const [classData] = await Promise.all([
-                    getClassTimetable(classId),
-                    studentId ? getStudentExtraSubjects(parseInt(studentId)) : Promise.resolve([]),
-                ])
+                setError(null)
+                const classData = await getClassTimetable(classId)
+                const baseEntries: ScheduleEntry[] = (classData as Array<{ id: number; weekday: string; period_no: number; subject_name: string; class_name: string }>).map((item) => ({
+                    id: `class-${item.id}`,
+                    day: mapWeekday(item.weekday),
+                    periodNo: item.period_no,
+                    subject: item.subject_name,
+                    room: item.class_name,
+                    type: 'class',
+                    time: mapPeriodToTime(item.period_no),
+                }))
 
-                const merged: ScheduleEntry[] = []
-
-                    // Add class timetable
-                    ; (classData as Array<{ id: number; weekday: string; period_no: number; subject_name: string; class_name: string }>).forEach((item) => {
-                        merged.push({
-                            id: `class-${item.id}`,
-                            day: mapWeekday(item.weekday),
-                            time: mapPeriodToTime(item.period_no),
-                            subject: item.subject_name,
-                            room: item.class_name,
-                            type: 'class',
-                        })
-                    })
-
-                // Add extra subjects if student selected any
-                if (studentId && selectedExtras.length > 0) {
-                    for (const subject of selectedExtras) {
-                        const extraData = await getExtraSubjectTimetable(subject)
-                            ; (extraData as Array<{ id: number; weekday: string; period_no: number; subject_name: string; location: string }>).forEach((item) => {
-                                merged.push({
-                                    id: `extra-${item.id}`,
-                                    day: mapWeekday(item.weekday),
-                                    time: mapPeriodToTime(item.period_no),
-                                    subject: item.subject_name,
-                                    room: item.location,
-                                    type: 'extra',
-                                })
-                            })
-                    }
+                if (!isCancelled) {
+                    setClassEntries(baseEntries)
+                    setExtraEntries([])
                 }
-
-                // Sort by day order then time
-                const dayOrder: Record<string, number> = {
-                    'T2': 0, 'T3': 1, 'T4': 2, 'T5': 3, 'T6': 4, 'T7': 5, 'CN': 6,
-                }
-                merged.sort((a, b) => {
-                    const da = dayOrder[a.day] ?? 0
-                    const db = dayOrder[b.day] ?? 0
-                    if (da !== db) return da - db
-                    return a.time.localeCompare(b.time)
-                })
-
-                setComposed(merged)
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to compose schedule')
+                if (!isCancelled) {
+                    setError(err instanceof Error ? err.message : 'Failed to compose schedule')
+                }
             }
         }
-        composeSchedule()
-    }, [classId, studentId, selectedExtras])
+        loadClassSchedule()
+
+        return () => {
+            isCancelled = true
+        }
+    }, [classId])
+
+    // Load student extra subject timetable after class timetable is ready
+    useEffect(() => {
+        let isCancelled = false
+
+        const loadStudentSchedule = async () => {
+            if (!classId || !studentId) {
+                setExtraEntries([])
+                return
+            }
+
+            try {
+                setError(null)
+                const studentSubjects = await getStudentExtraSubjects(parseInt(studentId, 10))
+                const subjectNames = Array.from(
+                    new Set(
+                        (studentSubjects as Array<{ subject_name: string }>)
+                            .map(s => s.subject_name)
+                            .filter(Boolean),
+                    ),
+                )
+
+                const mergedExtras: ScheduleEntry[] = []
+
+                for (const subjectName of subjectNames) {
+                    const extraData = await getExtraSubjectTimetable(subjectName)
+                        ; (extraData as Array<{ id: number; weekday: string; period_no: number; subject_name: string; location: string }>).forEach((item) => {
+                            mergedExtras.push({
+                                id: `extra-${item.id}`,
+                                day: mapWeekday(item.weekday),
+                                periodNo: item.period_no,
+                                subject: item.subject_name,
+                                room: item.location,
+                                type: 'extra',
+                                time: mapPeriodToTime(item.period_no),
+                            })
+                        })
+                }
+
+                if (!isCancelled) {
+                    setExtraEntries(mergedExtras)
+                }
+            } catch (err) {
+                if (!isCancelled) {
+                    setExtraEntries([])
+                    setError(err instanceof Error ? err.message : 'Failed to load student schedule')
+                }
+            }
+        }
+
+        loadStudentSchedule()
+
+        return () => {
+            isCancelled = true
+        }
+    }, [classId, studentId])
 
     return (
-        <div className="grid gap-6 sm:grid-cols-2">
-            <div className="space-y-4 rounded-lg p-4 shadow-sm" style={{ background: "var(--surface)" }}>
-                <label className="block text-sm font-semibold">Chọn lớp</label>
-                {loading ? (
-                    <p style={{ color: "var(--muted)" }}>Đang tải...</p>
-                ) : (
-                    <select
-                        value={classId ?? ''}
-                        onChange={(e) => {
-                            const v = e.target.value || null
-                            setClassId(v)
-                            setStudentId(null)
-                            setSelectedExtras([])
-                        }}
-                        className="w-full rounded border px-3 py-2"
-                    >
-                        <option value="">-- Chọn lớp --</option>
-                        {classes.map((c) => (
-                            <option key={c.name} value={c.name}>
-                                {c.name}
-                            </option>
-                        ))}
-                    </select>
-                )}
+        <div className="space-y-6">
+            {/* Selection Panel */}
+            <div className="rounded-lg p-4 shadow-sm" style={{ background: "var(--surface)" }}>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label className="block text-sm font-semibold mb-2">Chọn lớp</label>
+                        {loading ? (
+                            <p style={{ color: "var(--muted)" }}>Đang tải...</p>
+                        ) : (
+                            <select
+                                value={classId ?? ''}
+                                onChange={(e) => {
+                                    const v = e.target.value || null
+                                    setClassId(v)
+                                    setStudentId(null)
+                                }}
+                                className="w-full rounded border px-3 py-2"
+                            >
+                                <option value="">-- Chọn lớp --</option>
+                                {classes.map((c) => (
+                                    <option key={c.name} value={c.name}>
+                                        {c.name}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
 
-                <label className="block text-sm font-semibold">Chọn học sinh (theo lớp)</label>
-                <select
-                    value={studentId ?? ''}
-                    onChange={(e) => setStudentId(e.target.value || null)}
-                    disabled={!classId}
-                    className="w-full rounded border px-3 py-2 disabled:opacity-60"
-                >
-                    <option value="">-- Chọn học sinh --</option>
-                    {studentsForClass.map((s) => (
-                        <option key={s.id} value={s.id}>
-                            {s.name}
-                        </option>
-                    ))}
-                </select>
-
-                <div>
-                    <p className="mb-2 text-sm font-semibold">Môn ôn (thêm vào nếu cần)</p>
-                    <div className="flex flex-wrap gap-2">
-                        {studentId && extraSubjects.length > 0
-                            ? extraSubjects.map((es) => (
-                                <label key={es.name} className="inline-flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedExtras.includes(es.name)}
-                                        onChange={(e) => {
-                                            if (e.target.checked) setSelectedExtras((p) => [...p, es.name])
-                                            else setSelectedExtras((p) => p.filter((t) => t !== es.name))
-                                        }}
-                                    />
-                                    <span className="text-sm">{es.name}</span>
-                                </label>
-                            ))
-                            : extraSubjects.slice(0, 6).map((es) => (
-                                <label key={es.name} className="inline-flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedExtras.includes(es.name)}
-                                        onChange={(e) => {
-                                            if (e.target.checked) setSelectedExtras((p) => [...p, es.name])
-                                            else setSelectedExtras((p) => p.filter((t) => t !== es.name))
-                                        }}
-                                    />
-                                    <span className="text-sm">{es.name}</span>
-                                </label>
+                    <div>
+                        <label className="block text-sm font-semibold mb-2">Chọn học sinh (tùy chọn)</label>
+                        <select
+                            value={studentId ?? ''}
+                            onChange={(e) => setStudentId(e.target.value || null)}
+                            disabled={!classId}
+                            className="w-full rounded border px-3 py-2 disabled:opacity-60"
+                        >
+                            <option value="">-- Chọn học sinh --</option>
+                            {students.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                    {s.name}
+                                </option>
                             ))}
+                        </select>
                     </div>
                 </div>
             </div>
 
+            {/* Timetable */}
             <div className="rounded-lg p-4 shadow-sm" style={{ background: "var(--surface)" }}>
-                <h3 className="mb-3 text-lg font-semibold">Kết quả TKB</h3>
+                <h3 className="mb-4 text-lg font-semibold">Thời Khóa Biểu</h3>
                 {error && (
                     <p className="text-sm text-red-600">{error}</p>
                 )}
                 {!classId && (
-                    <p className="text-sm" style={{ color: "var(--muted)" }}>Chưa có lịch để hiển thị.</p>
+                    <p className="text-sm" style={{ color: "var(--muted)" }}>Vui lòng chọn lớp để xem lịch học.</p>
                 )}
                 {classId && <TimetableView entries={composed} />}
             </div>
