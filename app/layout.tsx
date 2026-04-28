@@ -58,9 +58,6 @@ export default function RootLayout({
                 <p className="text-lg font-semibold tracking-tight">
                   TKB Ôn tốt nghiệp
                 </p>
-                <p className="text-sm" style={{ color: "var(--muted)" }}>
-                  Lịch học và danh sách theo yêu cầu
-                </p>
               </div>
             </Link>
             <nav className="flex items-center gap-2 text-sm font-semibold">
@@ -69,14 +66,14 @@ export default function RootLayout({
                 className="rounded-full border px-4 py-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_16px_30px_var(--shadow)]"
                 style={{ borderColor: "var(--stroke)", background: "var(--surface)", color: "var(--ink)" }}
               >
-                Thời khóa biểu
+                TKB
               </Link>
               <Link
                 href="/ds"
                 className="rounded-full border px-4 py-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_16px_30px_var(--shadow)]"
                 style={{ borderColor: "var(--stroke)", background: "var(--surface)", color: "var(--ink)" }}
               >
-                Danh sách
+                DS
               </Link>
             </nav>
           </div>
