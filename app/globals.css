@@ -216,6 +216,9 @@ html[data-theme="pink"] body::after {
 
 /* Fullscreen API styling */
 div:fullscreen {
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
   width: 100vw !important;
   height: 100vh !important;
   margin: 0 !important;
@@ -223,11 +226,6 @@ div:fullscreen {
   border: none !important;
   display: flex !important;
   flex-direction: column !important;
+  overflow: hidden !important;
   background: var(--background) !important;
-}
-
-div:fullscreen > * {
-  width: 100% !important;
-  height: 100% !important;
-  margin: 0 !important;
 }
