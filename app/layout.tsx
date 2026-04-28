@@ -85,7 +85,7 @@ export default function RootLayout({
         <footer className="border-t" style={{ borderColor: "var(--stroke)", background: "color-mix(in srgb, var(--surface) 60%, transparent)" }}>
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 py-6 text-sm sm:flex-row sm:items-center sm:justify-between" style={{ color: "var(--muted)" }}>
             <span>Cập nhật 28/04/2026</span>
-            <span>Trung tâm điều phối lịch học ôn thi</span>
+            <span>Bản quyền thuộc về Minh Luân 12A3</span>
           </div>
         </footer>
       </body>
