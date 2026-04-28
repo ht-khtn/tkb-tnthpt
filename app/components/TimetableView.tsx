@@ -84,9 +84,10 @@ export default function TimetableView({ entries }: { entries: ScheduleEntry[] })
                                                         background:
                                                             entry.type === 'class'
                                                                 ? 'var(--accent-soft)'
-                                                                : 'rgba(20, 184, 166, 0.08)',
-                                                        border: `1px solid ${entry.type === 'class' ? 'var(--accent)' : '#a7f3d0'
+                                                                : 'var(--accent-2-soft)',
+                                                        border: `1px solid ${entry.type === 'class' ? 'var(--accent)' : 'var(--accent-2)'
                                                             }`,
+                                                        color: 'var(--ink)',
                                                     }}
                                                 >
                                                     <div className="font-medium">{entry.subject}</div>

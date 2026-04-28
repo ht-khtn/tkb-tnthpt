@@ -41,17 +41,41 @@ body {
   isolation: isolate;
   overflow-x: hidden;
   background-image:
-    radial-gradient(1200px 700px at 10% -20%, rgba(20, 184, 166, 0.2), transparent 60%),
-    radial-gradient(900px 600px at 90% 0%, rgba(15, 118, 110, 0.18), transparent 55%),
-    linear-gradient(120deg, rgba(255, 255, 255, 0.95), rgba(240, 255, 254, 0.95));
+    radial-gradient(
+      1200px 700px at 10% -20%,
+      rgba(20, 184, 166, 0.2),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 600px at 90% 0%,
+      rgba(15, 118, 110, 0.18),
+      transparent 55%
+    ),
+    linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0.95),
+      rgba(240, 255, 254, 0.95)
+    );
   background-attachment: fixed;
 }
 
 html[data-theme="pink"] body {
   background-image:
-    radial-gradient(1200px 700px at 10% -20%, rgba(236, 72, 153, 0.22), transparent 60%),
-    radial-gradient(900px 600px at 90% 0%, rgba(190, 24, 93, 0.18), transparent 55%),
-    linear-gradient(120deg, rgba(255, 255, 255, 0.96), rgba(255, 240, 246, 0.96));
+    radial-gradient(
+      1200px 700px at 10% -20%,
+      rgba(236, 72, 153, 0.22),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 600px at 90% 0%,
+      rgba(190, 24, 93, 0.18),
+      transparent 55%
+    ),
+    linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0.96),
+      rgba(255, 240, 246, 0.96)
+    );
 }
 
 .app-text {
@@ -114,11 +138,19 @@ body::before {
   height: 420px;
   top: -120px;
   left: -80px;
-  background: radial-gradient(circle at 30% 30%, rgba(212, 90, 58, 0.45), transparent 70%);
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(212, 90, 58, 0.45),
+    transparent 70%
+  );
 }
 
 html[data-theme="pink"] body::before {
-  background: radial-gradient(circle at 30% 30%, rgba(236, 72, 153, 0.46), transparent 70%);
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(236, 72, 153, 0.46),
+    transparent 70%
+  );
 }
 
 body::after {
@@ -126,12 +158,20 @@ body::after {
   height: 520px;
   bottom: -160px;
   right: -140px;
-  background: radial-gradient(circle at 70% 60%, rgba(47, 111, 109, 0.4), transparent 72%);
+  background: radial-gradient(
+    circle at 70% 60%,
+    rgba(47, 111, 109, 0.4),
+    transparent 72%
+  );
   animation-delay: -6s;
 }
 
 html[data-theme="pink"] body::after {
-  background: radial-gradient(circle at 70% 60%, rgba(190, 24, 93, 0.42), transparent 72%);
+  background: radial-gradient(
+    circle at 70% 60%,
+    rgba(190, 24, 93, 0.42),
+    transparent 72%
+  );
 }
 
 .motion-rise {
