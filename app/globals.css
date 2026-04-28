@@ -16,12 +16,20 @@
   --shadow: rgba(15, 47, 45, 0.18);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-space);
-  --font-display: var(--font-fraunces);
-  --font-mono: var(--font-jetbrains-mono);
+html[data-theme="pink"] {
+  --background: #fff0f6;
+  --foreground: #4a1028;
+  --surface: #fff7fb;
+  --surface-2: #ffe0ec;
+  --surface-3: #ffc7dd;
+  --ink: #4a1028;
+  --muted: #8c4a69;
+  --accent: #ec4899;
+  --accent-soft: rgba(236, 72, 153, 0.16);
+  --accent-2: #be185d;
+  --accent-2-soft: rgba(190, 24, 93, 0.16);
+  --stroke: #f5b8d1;
+  --shadow: rgba(74, 16, 40, 0.18);
 }
 
 body {
@@ -37,6 +45,13 @@ body {
     radial-gradient(900px 600px at 90% 0%, rgba(15, 118, 110, 0.18), transparent 55%),
     linear-gradient(120deg, rgba(255, 255, 255, 0.95), rgba(240, 255, 254, 0.95));
   background-attachment: fixed;
+}
+
+html[data-theme="pink"] body {
+  background-image:
+    radial-gradient(1200px 700px at 10% -20%, rgba(236, 72, 153, 0.22), transparent 60%),
+    radial-gradient(900px 600px at 90% 0%, rgba(190, 24, 93, 0.18), transparent 55%),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.96), rgba(255, 240, 246, 0.96));
 }
 
 .app-text {
@@ -102,6 +117,10 @@ body::before {
   background: radial-gradient(circle at 30% 30%, rgba(212, 90, 58, 0.45), transparent 70%);
 }
 
+html[data-theme="pink"] body::before {
+  background: radial-gradient(circle at 30% 30%, rgba(236, 72, 153, 0.46), transparent 70%);
+}
+
 body::after {
   width: 520px;
   height: 520px;
@@ -109,6 +128,10 @@ body::after {
   right: -140px;
   background: radial-gradient(circle at 70% 60%, rgba(47, 111, 109, 0.4), transparent 72%);
   animation-delay: -6s;
+}
+
+html[data-theme="pink"] body::after {
+  background: radial-gradient(circle at 70% 60%, rgba(190, 24, 93, 0.42), transparent 72%);
 }
 
 .motion-rise {

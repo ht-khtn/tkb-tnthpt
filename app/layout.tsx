@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Fraunces, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import ThemeSync from "@/app/components/ThemeSync";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space",
@@ -37,6 +38,7 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${fraunces.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col" style={{ color: "var(--ink)" }}>
+        <ThemeSync />
         <header
           className="sticky top-0 z-20 border-b backdrop-blur"
           style={{

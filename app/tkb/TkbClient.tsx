@@ -4,18 +4,63 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { getClasses, getStudents, getClassTimetable, getStudentExtraSubjects, getExtraSubjectTimetable } from '@/app/lib/supabase-api'
 import { mapPeriodToTime, mapWeekday, ScheduleEntry } from '@/app/lib/db-helpers'
 import TimetableView from '@/app/components/TimetableView'
+import { applyTheme, isPinkTheme, TKB_STORAGE_CLASS_KEY, TKB_STORAGE_STUDENT_KEY } from '@/app/lib/theme'
 
 export default function TkbClient() {
     const [classes, setClasses] = useState<Array<{ name: string; homeroom_teacher: string }>>([])
     const [students, setStudents] = useState<Array<{ id: number; name: string; class: string }>>([])
-    const [classId, setClassId] = useState<string | null>(null)
-    const [studentId, setStudentId] = useState<string | null>(null)
+    const [classId, setClassId] = useState<string | null>(() => {
+        if (typeof window === 'undefined') {
+            return null
+        }
+
+        return window.localStorage.getItem(TKB_STORAGE_CLASS_KEY)
+    })
+    const [studentId, setStudentId] = useState<string | null>(() => {
+        if (typeof window === 'undefined') {
+            return null
+        }
+
+        return window.localStorage.getItem(TKB_STORAGE_STUDENT_KEY)
+    })
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [classEntries, setClassEntries] = useState<ScheduleEntry[]>([])
     const [extraEntries, setExtraEntries] = useState<ScheduleEntry[]>([])
 
+    const selectedStudentName = useMemo(() => {
+        if (!studentId) {
+            return null
+        }
+
+        return students.find((student) => String(student.id) === studentId)?.name ?? null
+    }, [studentId, students])
+
     const composed = useMemo(() => [...classEntries, ...extraEntries], [classEntries, extraEntries])
+
+    // Persist selection after hydration.
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return
+        }
+
+        if (classId) {
+            window.localStorage.setItem(TKB_STORAGE_CLASS_KEY, classId)
+        } else {
+            window.localStorage.removeItem(TKB_STORAGE_CLASS_KEY)
+        }
+
+        if (studentId) {
+            window.localStorage.setItem(TKB_STORAGE_STUDENT_KEY, studentId)
+        } else {
+            window.localStorage.removeItem(TKB_STORAGE_STUDENT_KEY)
+        }
+    }, [classId, studentId])
+
+    // Apply the pink easter egg theme when the exact class and student are selected.
+    useEffect(() => {
+        applyTheme(isPinkTheme(classId, selectedStudentName))
+    }, [classId, selectedStudentName])
 
     // Load initial data (classes only)
     useEffect(() => {
