@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f1e9;
-  --foreground: #1d1a16;
-  --surface: #fff6ea;
-  --surface-2: #f2e3d2;
-  --surface-3: #e9d2bc;
-  --ink: #1d1a16;
-  --muted: #5f5347;
-  --accent: #d45a3a;
-  --accent-soft: rgba(212, 90, 58, 0.16);
-  --accent-2: #2f6f6d;
-  --accent-2-soft: rgba(47, 111, 109, 0.16);
-  --stroke: #e1d0be;
-  --shadow: rgba(44, 30, 18, 0.18);
+  --background: #f0fffe;
+  --foreground: #0f2f2d;
+  --surface: #f8ffff;
+  --surface-2: #e0f7f5;
+  --surface-3: #c8eff0;
+  --ink: #0f2f2d;
+  --muted: #5a8a87;
+  --accent: #14b8a6;
+  --accent-soft: rgba(20, 184, 166, 0.16);
+  --accent-2: #0f766e;
+  --accent-2-soft: rgba(15, 118, 110, 0.16);
+  --stroke: #b8e5e0;
+  --shadow: rgba(15, 47, 45, 0.18);
 }
 
 @theme inline {
@@ -33,9 +33,9 @@ body {
   isolation: isolate;
   overflow-x: hidden;
   background-image:
-    radial-gradient(1200px 700px at 10% -20%, rgba(212, 90, 58, 0.2), transparent 60%),
-    radial-gradient(900px 600px at 90% 0%, rgba(47, 111, 109, 0.18), transparent 55%),
-    linear-gradient(120deg, rgba(255, 255, 255, 0.92), rgba(247, 241, 233, 0.92));
+    radial-gradient(1200px 700px at 10% -20%, rgba(20, 184, 166, 0.2), transparent 60%),
+    radial-gradient(900px 600px at 90% 0%, rgba(15, 118, 110, 0.18), transparent 55%),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.95), rgba(240, 255, 254, 0.95));
   background-attachment: fixed;
 }
 
