@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { mapPeriodToTime, ScheduleEntry } from '@/app/lib/db-helpers'
+import { ScheduleEntry } from '@/app/lib/db-helpers'
 
 const dayLabels: Record<string, string> = {
     T2: 'Thứ 2',
@@ -14,7 +14,7 @@ const dayLabels: Record<string, string> = {
 }
 
 const dayOrder: string[] = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7']
-const periods = [1, 2, 3, 4, 5, 6, 7]
+const periods = [1, 2, 3, 4, 5]
 
 export default function TimetableView({ entries }: { entries: ScheduleEntry[] }) {
     // Group entries by period and day
@@ -62,7 +62,7 @@ export default function TimetableView({ entries }: { entries: ScheduleEntry[] })
                                 className="border p-2 font-medium"
                                 style={{ borderColor: 'var(--stroke)', color: 'var(--ink)' }}
                             >
-                                S{period} ({mapPeriodToTime(period)})
+                                S{period}
                             </td>
                             {dayOrder.map(day => (
                                 <td

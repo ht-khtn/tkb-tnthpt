@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { getClasses, getStudents, getAllSubjects } from '@/app/lib/supabase-api'
+import { getClasses, getStudents, getAllSubjects, getStudentsBySubject } from '@/app/lib/supabase-api'
 
 interface Student {
     id: number
@@ -16,6 +16,7 @@ export default function DsClient() {
     const [mode, setMode] = useState<'class' | 'subject'>('class')
     const [classId, setClassId] = useState<string | null>(null)
     const [subject, setSubject] = useState<string | null>(null)
+    const [subjectStudentIds, setSubjectStudentIds] = useState<number[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -43,6 +44,24 @@ export default function DsClient() {
         loadData()
     }, [])
 
+    // Load students for selected subject
+    useEffect(() => {
+        if (mode === 'subject' && subject) {
+            const loadSubjectStudents = async () => {
+                try {
+                    const studentIds = await getStudentsBySubject(subject)
+                    setSubjectStudentIds(studentIds)
+                } catch (err) {
+                    console.error('Failed to load students by subject:', err)
+                    setSubjectStudentIds([])
+                }
+            }
+            loadSubjectStudents()
+        } else {
+            setSubjectStudentIds([])
+        }
+    }, [subject, mode])
+
     // Filter students based on mode and selection
     const resultStudents = useMemo(() => {
         if (mode === 'class') {
@@ -50,12 +69,11 @@ export default function DsClient() {
             return allStudents.filter((s) => s.class === classId)
         }
         if (mode === 'subject') {
-            if (!subject) return []
-            // For now, return students from all classes (in a real app, you'd check student_subjects table)
-            return allStudents
+            if (!subject || subjectStudentIds.length === 0) return []
+            return allStudents.filter((s) => subjectStudentIds.includes(s.id))
         }
         return []
-    }, [mode, classId, subject, allStudents])
+    }, [mode, classId, subject, allStudents, subjectStudentIds])
 
     return (
         <div className="grid gap-6 sm:grid-cols-2">

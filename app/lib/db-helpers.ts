@@ -26,18 +26,9 @@ export function mapWeekday(weekday: string | number): DayKey {
   return map[weekday] || "T2";
 }
 
-// Map period_no sang time
-export function mapPeriodToTime(periodNo: number): string {
-  const times: Record<number, string> = {
-    1: "07:15-08:45",
-    2: "09:00-10:30",
-    3: "10:45-12:15",
-    4: "13:30-15:00",
-    5: "15:15-16:45",
-    6: "18:30-20:00",
-    7: "20:05-21:35",
-  };
-  return times[periodNo] || "07:15-08:45";
+// Map period_no sang time (deprecated - not used)
+export function mapPeriodToTime(): string {
+  return "";
 }
 
 export type DayKey = "T2" | "T3" | "T4" | "T5" | "T6" | "T7" | "CN";

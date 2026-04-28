@@ -72,7 +72,7 @@ export default function TkbClient() {
                     subject: item.subject_name,
                     room: item.class_name,
                     type: 'class',
-                    time: mapPeriodToTime(item.period_no),
+                    time: mapPeriodToTime(),
                 }))
 
                 if (!isCancelled) {
@@ -125,7 +125,7 @@ export default function TkbClient() {
                                 subject: item.subject_name,
                                 room: item.location,
                                 type: 'extra',
-                                time: mapPeriodToTime(item.period_no),
+                                time: mapPeriodToTime(),
                             })
                         })
                 }

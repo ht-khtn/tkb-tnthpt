@@ -86,3 +86,24 @@ export async function getExtraSubjectTimetable(subjectName: string) {
 export async function getAllSubjects() {
   return supabaseQuery("subjects", { select: "name" });
 }
+
+export async function getStudentsBySubject(subjectName: string) {
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/student_subjects?select=student_id&subject_name=eq.${encodeURIComponent(subjectName)}`,
+    {
+      method: "GET",
+      headers: supabaseHeaders(),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Supabase API error: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  const data = await response.json();
+  return (data as Array<{ student_id: string }>).map((row) =>
+    parseInt(row.student_id, 10),
+  );
+}
