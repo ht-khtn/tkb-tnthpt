@@ -213,3 +213,21 @@ html[data-theme="pink"] body::after {
     animation: none;
   }
 }
+
+/* Fullscreen API styling */
+div:fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: var(--background) !important;
+}
+
+div:fullscreen > * {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+}

@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { getClasses, getStudents, getClassTimetable, getStudentExtraSubjects, getExtraSubjectTimetable } from '@/app/lib/supabase-api'
 import { mapPeriodToTime, mapWeekday, ScheduleEntry } from '@/app/lib/db-helpers'
 import TimetableView from '@/app/components/TimetableView'
 import { applyTheme, isPinkTheme, TKB_STORAGE_CLASS_KEY, TKB_STORAGE_STUDENT_KEY } from '@/app/lib/theme'
 
 export default function TkbClient() {
+    const fullscreenRef = useRef<HTMLDivElement>(null)
     const [classes, setClasses] = useState<Array<{ name: string; homeroom_teacher: string }>>([])
     const [students, setStudents] = useState<Array<{ id: number; name: string; class: string }>>([])
     const [classId, setClassId] = useState<string | null>(() => {
@@ -27,6 +28,7 @@ export default function TkbClient() {
     const [error, setError] = useState<string | null>(null)
     const [classEntries, setClassEntries] = useState<ScheduleEntry[]>([])
     const [extraEntries, setExtraEntries] = useState<ScheduleEntry[]>([])
+    const [isFullscreen, setIsFullscreen] = useState(false)
 
     const selectedStudentName = useMemo(() => {
         if (!studentId) {
@@ -37,6 +39,42 @@ export default function TkbClient() {
     }, [studentId, students])
 
     const composed = useMemo(() => [...classEntries, ...extraEntries], [classEntries, extraEntries])
+
+    // Handle fullscreen changes
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement) {
+                setIsFullscreen(false)
+            }
+        }
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange)
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange)
+        }
+    }, [])
+
+    const handleExpandFullscreen = async () => {
+        if (fullscreenRef.current) {
+            try {
+                await fullscreenRef.current.requestFullscreen()
+                setIsFullscreen(true)
+            } catch (err) {
+                console.error('Failed to enter fullscreen:', err)
+            }
+        }
+    }
+
+    const handleExitFullscreen = async () => {
+        if (document.fullscreenElement) {
+            try {
+                await document.exitFullscreen()
+                setIsFullscreen(false)
+            } catch (err) {
+                console.error('Failed to exit fullscreen:', err)
+            }
+        }
+    }
 
     // Persist selection after hydration.
     useEffect(() => {
@@ -194,64 +232,103 @@ export default function TkbClient() {
     }, [classId, studentId])
 
     return (
-        <div className="space-y-6">
-            {/* Selection Panel */}
-            <div className="rounded-lg p-4 shadow-sm" style={{ background: "var(--surface)" }}>
-                <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label className="block text-sm font-semibold mb-2">Chọn lớp</label>
-                        {loading ? (
-                            <p style={{ color: "var(--muted)" }}>Đang tải...</p>
-                        ) : (
-                            <select
-                                value={classId ?? ''}
-                                onChange={(e) => {
-                                    const v = e.target.value || null
-                                    setClassId(v)
-                                    setStudentId(null)
-                                }}
-                                className="w-full rounded border px-3 py-2"
+        <>
+            {isFullscreen ? (
+                /* Fullscreen mode - Fullscreen API */
+                <div ref={fullscreenRef} className="flex flex-col p-4 w-full h-full" style={{ background: "var(--background)" }}>
+                    <div className="flex-1 overflow-auto rounded-lg p-4 shadow-sm" style={{ background: "var(--surface)" }}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold">Thời Khóa Biểu</h3>
+                            <button
+                                onClick={handleExitFullscreen}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded hover:opacity-70 transition"
+                                style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+                                title="Thu nhỏ"
                             >
-                                <option value="">-- Chọn lớp --</option>
-                                {classes.map((c) => (
-                                    <option key={c.name} value={c.name}>
-                                        {c.name}
-                                    </option>
-                                ))}
-                            </select>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-semibold mb-2">Chọn học sinh (tùy chọn)</label>
-                        <select
-                            value={studentId ?? ''}
-                            onChange={(e) => setStudentId(e.target.value || null)}
-                            disabled={!classId}
-                            className="w-full rounded border px-3 py-2 disabled:opacity-60"
-                        >
-                            <option value="">-- Chọn học sinh --</option>
-                            {students.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                    {s.name}
-                                </option>
-                            ))}
-                        </select>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                                </svg>
+                            </button>
+                        </div>
+                        {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+                        {classId && <TimetableView entries={composed} />}
                     </div>
                 </div>
-            </div>
+            ) : (
+                /* Normal mode */
+                <div className="space-y-6">
+                    {/* Selection Panel */}
+                    <div className="rounded-lg p-4 shadow-sm" style={{ background: "var(--surface)" }}>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label className="block text-sm font-semibold mb-2">Chọn lớp</label>
+                                {loading ? (
+                                    <p style={{ color: "var(--muted)" }}>Đang tải...</p>
+                                ) : (
+                                    <select
+                                        value={classId ?? ''}
+                                        onChange={(e) => {
+                                            const v = e.target.value || null
+                                            setClassId(v)
+                                            setStudentId(null)
+                                        }}
+                                        className="w-full rounded border px-3 py-2"
+                                    >
+                                        <option value="">-- Chọn lớp --</option>
+                                        {classes.map((c) => (
+                                            <option key={c.name} value={c.name}>
+                                                {c.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
 
-            {/* Timetable */}
-            <div className="rounded-lg p-4 shadow-sm" style={{ background: "var(--surface)" }}>
-                <h3 className="mb-4 text-lg font-semibold">Thời Khóa Biểu</h3>
-                {error && (
-                    <p className="text-sm text-red-600">{error}</p>
-                )}
-                {!classId && (
-                    <p className="text-sm" style={{ color: "var(--muted)" }}>Vui lòng chọn lớp để xem lịch học.</p>
-                )}
-                {classId && <TimetableView entries={composed} />}
-            </div>
-        </div>
+                            <div>
+                                <label className="block text-sm font-semibold mb-2">Chọn học sinh (tùy chọn)</label>
+                                <select
+                                    value={studentId ?? ''}
+                                    onChange={(e) => setStudentId(e.target.value || null)}
+                                    disabled={!classId}
+                                    className="w-full rounded border px-3 py-2 disabled:opacity-60"
+                                >
+                                    <option value="">-- Chọn học sinh --</option>
+                                    {students.map((s) => (
+                                        <option key={s.id} value={s.id}>
+                                            {s.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Timetable */}
+                    <div className="rounded-lg p-4 shadow-sm relative" style={{ background: "var(--surface)" }}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold">Thời Khóa Biểu</h3>
+                            <button
+                                onClick={handleExpandFullscreen}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded hover:opacity-70 transition"
+                                style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+                                title="Phóng to"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                                </svg>
+                            </button>
+                        </div>
+                        {error && (
+                            <p className="text-sm text-red-600">{error}</p>
+                        )}
+                        {!classId && (
+                            <p className="text-sm" style={{ color: "var(--muted)" }}>Vui lòng chọn lớp để xem lịch học.</p>
+                        )}
+                        {classId && <TimetableView entries={composed} />}
+                    </div>
+                </div>
+            )
+            }
+        </>
     )
 }
