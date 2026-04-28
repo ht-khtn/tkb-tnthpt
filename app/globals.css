@@ -1,26 +1,152 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f1e9;
+  --foreground: #1d1a16;
+  --surface: #fff6ea;
+  --surface-2: #f2e3d2;
+  --surface-3: #e9d2bc;
+  --ink: #1d1a16;
+  --muted: #5f5347;
+  --accent: #d45a3a;
+  --accent-soft: rgba(212, 90, 58, 0.16);
+  --accent-2: #2f6f6d;
+  --accent-2-soft: rgba(47, 111, 109, 0.16);
+  --stroke: #e1d0be;
+  --shadow: rgba(44, 30, 18, 0.18);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-space);
+  --font-display: var(--font-fraunces);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--background);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  min-height: 100%;
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(1200px 700px at 10% -20%, rgba(212, 90, 58, 0.2), transparent 60%),
+    radial-gradient(900px 600px at 90% 0%, rgba(47, 111, 109, 0.18), transparent 55%),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.92), rgba(247, 241, 233, 0.92));
+  background-attachment: fixed;
+}
+
+.app-text {
+  color: var(--ink);
+}
+
+.app-text-muted {
+  color: var(--muted);
+}
+
+.app-text-surface {
+  color: var(--surface);
+}
+
+.app-bg-surface {
+  background: var(--surface);
+}
+
+.app-bg-surface-80 {
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+}
+
+.app-bg-surface-60 {
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+}
+
+.app-bg-accent {
+  background: var(--accent);
+}
+
+.app-border-stroke {
+  border-color: var(--stroke);
+}
+
+.app-hover-border-stroke:hover {
+  border-color: var(--stroke);
+}
+
+.app-hover-text:hover {
+  color: var(--ink);
+}
+
+.app-shadow-soft {
+  box-shadow: 0 16px 30px var(--shadow);
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.5;
+  filter: blur(2px);
+  animation: drift 18s ease-in-out infinite;
+}
+
+body::before {
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  left: -80px;
+  background: radial-gradient(circle at 30% 30%, rgba(212, 90, 58, 0.45), transparent 70%);
+}
+
+body::after {
+  width: 520px;
+  height: 520px;
+  bottom: -160px;
+  right: -140px;
+  background: radial-gradient(circle at 70% 60%, rgba(47, 111, 109, 0.4), transparent 72%);
+  animation-delay: -6s;
+}
+
+.motion-rise {
+  animation: rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-18px, 16px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-rise {
+    animation: none;
+  }
+
+  body::before,
+  body::after {
+    animation: none;
+  }
 }
