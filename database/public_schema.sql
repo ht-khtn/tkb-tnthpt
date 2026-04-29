@@ -17,6 +17,12 @@ CREATE TABLE public.classes (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT classes_pkey PRIMARY KEY (name)
 );
+CREATE TABLE public.feedbacks (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  content text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT feedbacks_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.student_subjects (
   id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
   student_id integer,
