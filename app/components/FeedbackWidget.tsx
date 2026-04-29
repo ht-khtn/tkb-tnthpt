@@ -16,6 +16,7 @@ const PANEL_GAP = 12
 const PANEL_WIDTH = 360
 const PANEL_HEIGHT = 300
 const DRAG_THRESHOLD = 6
+const LEGACY_DEFAULT_POSITION = { x: MARGIN, y: MARGIN }
 
 function clamp(value: number, min: number, max: number) {
     return Math.min(max, Math.max(min, value))
@@ -45,6 +46,7 @@ export default function FeedbackWidget() {
         const loadPosition = () => {
             const fallbackX = Math.max(MARGIN, window.innerWidth - BUTTON_SIZE - MARGIN)
             const fallbackY = Math.max(MARGIN, window.innerHeight - BUTTON_SIZE - MARGIN)
+            const fallbackPosition = { x: fallbackX, y: fallbackY }
 
             try {
                 const raw = window.localStorage.getItem(STORAGE_KEY)
@@ -52,10 +54,19 @@ export default function FeedbackWidget() {
                     const parsed = JSON.parse(raw) as Partial<WidgetPosition>
                     const { x, y } = parsed
                     if (typeof x === 'number' && typeof y === 'number') {
+                        const isLegacyDefault = x === LEGACY_DEFAULT_POSITION.x && y === LEGACY_DEFAULT_POSITION.y
                         window.requestAnimationFrame(() => {
                             setPosition({
-                                x: clamp(x, MARGIN, Math.max(MARGIN, window.innerWidth - BUTTON_SIZE - MARGIN)),
-                                y: clamp(y, MARGIN, Math.max(MARGIN, window.innerHeight - BUTTON_SIZE - MARGIN)),
+                                x: clamp(
+                                    isLegacyDefault ? fallbackPosition.x : x,
+                                    MARGIN,
+                                    Math.max(MARGIN, window.innerWidth - BUTTON_SIZE - MARGIN),
+                                ),
+                                y: clamp(
+                                    isLegacyDefault ? fallbackPosition.y : y,
+                                    MARGIN,
+                                    Math.max(MARGIN, window.innerHeight - BUTTON_SIZE - MARGIN),
+                                ),
                             })
                             setIsMounted(true)
                         })
@@ -67,7 +78,7 @@ export default function FeedbackWidget() {
             }
 
             window.requestAnimationFrame(() => {
-                setPosition({ x: fallbackX, y: fallbackY })
+                setPosition(fallbackPosition)
                 setIsMounted(true)
             })
         }
