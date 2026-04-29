@@ -22,8 +22,9 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export default function FeedbackWidget() {
+    const [isMounted, setIsMounted] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
-    const [position, setPosition] = useState<WidgetPosition>({ x: MARGIN, y: MARGIN })
+    const [position, setPosition] = useState<WidgetPosition | null>(null)
     const [feedback, setFeedback] = useState('')
     const [submissionState, setSubmissionState] = useState<SubmissionState>('idle')
     const [statusMessage, setStatusMessage] = useState('')
@@ -56,6 +57,7 @@ export default function FeedbackWidget() {
                                 x: clamp(x, MARGIN, Math.max(MARGIN, window.innerWidth - BUTTON_SIZE - MARGIN)),
                                 y: clamp(y, MARGIN, Math.max(MARGIN, window.innerHeight - BUTTON_SIZE - MARGIN)),
                             })
+                            setIsMounted(true)
                         })
                         return
                     }
@@ -66,6 +68,7 @@ export default function FeedbackWidget() {
 
             window.requestAnimationFrame(() => {
                 setPosition({ x: fallbackX, y: fallbackY })
+                setIsMounted(true)
             })
         }
 
@@ -76,8 +79,16 @@ export default function FeedbackWidget() {
     }, [])
 
     useEffect(() => {
+        if (!position) {
+            return
+        }
+
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(position))
     }, [position])
+
+    if (!isMounted || !position) {
+        return null
+    }
 
     const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
         if (event.button !== 0) {
@@ -207,7 +218,17 @@ export default function FeedbackWidget() {
                 onPointerCancel={finishPointerInteraction}
                 onClick={handleClick}
             >
-                <span className="font-display text-base leading-none">Góp ý</span>
+                {isOpen ? (
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 6l12 12" />
+                        <path d="M18 6L6 18" />
+                    </svg>
+                ) : (
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M7 18.5V20l2.7-1.5" />
+                        <path d="M6 6.5h12a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H11l-4.5 2.5V15.5H6a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z" />
+                    </svg>
+                )}
             </button>
 
             {isOpen && (
