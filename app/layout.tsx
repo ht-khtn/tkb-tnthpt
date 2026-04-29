@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Fraunces, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import ThemeSync from "@/app/components/ThemeSync";
+import FeedbackWidget from "@/app/components/FeedbackWidget";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space",
@@ -81,6 +82,7 @@ export default function RootLayout({
         <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-16 pt-10">
           {children}
         </main>
+        <FeedbackWidget />
         <footer className="border-t" style={{ borderColor: "var(--stroke)", background: "color-mix(in srgb, var(--surface) 60%, transparent)" }}>
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 py-6 text-sm sm:flex-row sm:items-center sm:justify-between" style={{ color: "var(--muted)" }}>
             <span>Cập nhật 28/04/2026</span>
